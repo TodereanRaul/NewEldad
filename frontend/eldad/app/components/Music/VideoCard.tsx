@@ -27,7 +27,7 @@ export default function VideoCard({
     : videoTitle;
 
   return (
-    <SafeAreaView className="rounded-lg shadow-md mb-1 overflow-hidden">
+    <View className="rounded-lg shadow-md mb-1 overflow-hidden">
       {/* Video Information Container */}
       <View className="flex-row items-center justify-between py-2 px-2">
         <TouchableOpacity onPress={onPress}>
@@ -70,6 +70,6 @@ export default function VideoCard({
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
