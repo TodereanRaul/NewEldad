@@ -64,7 +64,7 @@ export default function HomeScreen() {
                {/* Viziune Section */}
         <NextEvents />
         {/* Viziunea Noastră */}
-        <View className="relative rounded-lg mx-6 mt-6 shadow-sm overflow-hidden">
+        <View className="relative rounded-lg mx-6 my-6 shadow-sm overflow-hidden">
           <OptimizedImage
             source={require('../../assets/images/viziune.jpg')}
             width={400}
@@ -73,7 +73,6 @@ export default function HomeScreen() {
             borderRadius={12}
             className="absolute inset-0"
           />
-          <View className="bg-black/60 absolute inset-0" />
           <View className="relative z-10">
             <Text className="text-white text-2xl font-bold  my-4 text-center">Viziunea Noastră</Text>
             <Text className="text-white text-lg leading-6 mb-4 text-center">
