@@ -10,8 +10,7 @@ urlpatterns = [
     path('auth/authenticate/', views.authenticate_user, name='authenticate'),
     
     # Ajutorare endpoints
-    path('ajutorare/', views.EldadAjutorareListCreateView.as_view(), name='ajutorare-list'),
-    path('ajutorare/<uuid:id>/', views.EldadAjutorareDetailView.as_view(), name='ajutorare-detail'),
+    path('ajutorare/', include('ajutorare.urls')),
     
     # Media endpoints
     path('media/', views.EldadMediaListCreateView.as_view(), name='media-list'),
