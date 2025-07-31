@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Text, View, ScrollView, SafeAreaView, TouchableOpacity, Image } from "react-native";
+import { Text, View, ScrollView, SafeAreaView, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import VideoCard from "../components/Music/VideoCard";
 import SearchInput from "../components/ui/SearchInput";
 import FilterBar from "../components/ui/FilterBar";
@@ -14,29 +15,90 @@ import VeziToateCard from "../components/Music/VeziToateCard";
 import FavoriteCard from "../components/Music/FavoriteCard";  
 import VideoModal from "../components/Music/VideoModal";
 
+const VIDEOS_CACHE_KEY = 'cached_videos';
+
 export default function MusicScreen() {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentVideo, setCurrentVideo] = useState<any>(null);
 
-  // Fetch videos on component mount
+  // Load videos on component mount - only from cache since they're preloaded
   useEffect(() => {
-    fetchVideos();
+    loadVideosFromCache();
   }, []);
 
-  const fetchVideos = async () => {
+  const loadVideosFromCache = async () => {
     try {
-      setLoading(true);
       setError(null);
-      const fetchedVideos = await api.getVideos();
-      setVideos(fetchedVideos);
+      const cachedVideos = await loadFromCache();
+      if (cachedVideos.length > 0) {
+        setVideos(cachedVideos);
+        console.log('Loaded videos from cache instantly');
+      } else {
+        // Only fetch from API if no cache exists (shouldn't happen since preloaded)
+        setLoading(true);
+        const freshVideos = await fetchVideosFromAPI();
+        if (freshVideos.length > 0) {
+          setVideos(freshVideos);
+          await saveToCache(freshVideos);
+        }
+        setLoading(false);
+      }
     } catch (err) {
-      setError('Failed to fetch videos');
-      console.error('Error fetching videos:', err);
-    } finally {
+      setError('Failed to load videos');
+      console.error('Error loading videos:', err);
       setLoading(false);
+    }
+  };
+
+  const loadFromCache = async (): Promise<Video[]> => {
+    try {
+      const cachedData = await AsyncStorage.getItem(VIDEOS_CACHE_KEY);
+      if (cachedData) {
+        return JSON.parse(cachedData);
+      }
+    } catch (error) {
+      console.log('Error loading from cache:', error);
+    }
+    return [];
+  };
+
+  const saveToCache = async (videos: Video[]) => {
+    try {
+      await AsyncStorage.setItem(VIDEOS_CACHE_KEY, JSON.stringify(videos));
+      console.log('Videos saved to cache');
+    } catch (error) {
+      console.log('Error saving to cache:', error);
+    }
+  };
+
+  const fetchVideosFromAPI = async (): Promise<Video[]> => {
+    try {
+      const fetchedVideos = await api.getVideos();
+      return fetchedVideos;
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      throw error;
+    }
+  };
+
+  // Only refresh when user explicitly pulls to refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const freshVideos = await fetchVideosFromAPI();
+      if (freshVideos.length > 0) {
+        setVideos(freshVideos);
+        await saveToCache(freshVideos);
+        console.log('Videos refreshed from API');
+      }
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -76,8 +138,16 @@ export default function MusicScreen() {
     searchFields: ['title', 'channel_name']
   });
 
-  const handleContentPress = (item: any) => {
-    setCurrentVideo(item);
+  const handleContentPress = (item: Video) => {
+    setCurrentVideo({
+      id: item.video_id, // Use video_id for YouTube player
+      title: item.title,
+      artist: item.channel_name,
+      thumbnail: item.thumbnail,
+      uploadDate: new Date(item.published_at).toLocaleDateString('en-GB'),
+      type: item.category,
+      isFavorite: item.is_favorite || false,
+    });
     setModalVisible(true);
   };
 
@@ -182,7 +252,8 @@ export default function MusicScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-[#242632] justify-center items-center">
-        <Text className="text-white text-lg">Loading videos...</Text>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text className="text-white text-lg mt-4">Loading videos...</Text>
       </View>
     );
   }
@@ -191,7 +262,7 @@ export default function MusicScreen() {
     return (
       <View className="flex-1 bg-[#242632] justify-center items-center">
         <Text className="text-red-400 mb-4">{error}</Text>
-        <TouchableOpacity onPress={fetchVideos} className="px-4 py-2 bg-blue-500 rounded">
+        <TouchableOpacity onPress={loadVideosFromCache} className="px-4 py-2 bg-blue-500 rounded">
           <Text className="text-white">Retry</Text>
         </TouchableOpacity>
       </View>
@@ -233,6 +304,14 @@ export default function MusicScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 0 }}
         contentInsetAdjustmentBehavior="automatic"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+            colors={["#ffffff"]}
+          />
+        }
       >
         <View className="px-4">
           {/* Content Cards */}
