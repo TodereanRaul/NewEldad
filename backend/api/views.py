@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -13,6 +14,7 @@ from .serializers import (
 )
 from ajutorare.models import EldadAjutorare
 from media.models import EldadMedia
+from youtube_videos.models import Video
 
 # Authentication Views
 @api_view(['POST'])
@@ -119,3 +121,22 @@ def payment_cancel(request):
 @permission_classes([AllowAny])
 def payment_error(request):
     return Response({'message': 'Payment error'})
+
+# Video Views
+class VideoFavoriteView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request, video_id):
+        try:
+            video = Video.objects.get(video_id=video_id)
+            video.is_favorite = not video.is_favorite
+            video.save()
+            return Response({
+                'success': True,
+                'is_favorite': video.is_favorite
+            })
+        except Video.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Video not found'
+            }, status=status.HTTP_404_NOT_FOUND)

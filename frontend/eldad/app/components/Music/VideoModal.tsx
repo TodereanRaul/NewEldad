@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   Dimensions,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
 const { width } = Dimensions.get('window');
 
@@ -34,10 +34,14 @@ export default function VideoModal({
   onFavoriteToggle 
 }: VideoModalProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     if (visible && video) {
       setIsFavorite(video.isFavorite || false);
+      setPlaying(true);
+    } else {
+      setPlaying(false);
     }
   }, [visible, video]);
 
@@ -58,39 +62,68 @@ export default function VideoModal({
       visible={visible}
       onRequestClose={onClose}
     >
+      {/* Modal Overlay */}
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#ffffff" />
-            </TouchableOpacity>
-            <Text style={styles.title} numberOfLines={1}>
-              {video.title}
-            </Text>
-            <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
-              <FontAwesome
-                name={isFavorite ? "heart" : "heart-o"}
-                size={20}
-                color={isFavorite ? "#ff6b6b" : "#ffffff"}
-              />
-            </TouchableOpacity>
-          </View>
+        {/* Touchable overlay to close modal when touching outside */}
+        <TouchableOpacity 
+          style={styles.overlayTouchable} 
+          activeOpacity={1} 
+          onPress={onClose}
+        >
+          {/* Modal Content */}
+          <TouchableOpacity 
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()} // Prevent closing when touching inside modal
+          >
+            {/* Modal Header */}
+            {/* <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle} numberOfLines={1}>
+                {video.title}
+              </Text>
+              <TouchableOpacity onPress={toggleFavorite}>
+                <FontAwesome
+                  name={isFavorite ? "heart" : "heart-o"}
+                  size={20}
+                  color={isFavorite ? "#ff6b6b" : "#ffffff"}
+                />
+              </TouchableOpacity>
+            </View> */}
 
-          {/* Video Placeholder */}
-          <View style={styles.videoPlaceholder}>
-            <FontAwesome name="play-circle" size={60} color="#ffffff" />
-            <Text style={styles.placeholderText}>Video Player</Text>
-          </View>
+            {/* YouTube Player */}
+            <YoutubePlayer
+              height={(width * 9) / 16}
+              width="100%"
+              videoId={video.id}
+              play={playing}
+              onStateChange={(event: any) => {
+                if (event === "ended") {
+                  setPlaying(false);
+                  onClose();
+                }
+              }}
+              onReady={() => console.log("Player ready")}
+              onError={(e: any) => console.log(e)}
+              initialPlayerParams={{
+                preventFullScreen: false,
+                cc_lang_pref: "us",
+                showClosedCaptions: true
+              }}
+            />
 
-          {/* Video Info */}
-          <View style={styles.videoInfo}>
-            <Text style={styles.artistText}>{video.artist}</Text>
-            <Text style={styles.uploadDateText}>
-              Uploaded on {video.uploadDate}
-            </Text>
-          </View>
-        </View>
+            {/* <View style={styles.videoInfo}>
+              <Text style={styles.artistText}>
+                Artist: {video.artist}
+              </Text>
+              <Text style={styles.uploadDateText}>
+                Uploaded on: {video.uploadDate}
+              </Text>
+            </View> */}
+          </TouchableOpacity>
+        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -99,61 +132,47 @@ export default function VideoModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Changed from 0.9 to 0.5 for more transparency
+  },
+  overlayTouchable: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
   },
   modalContent: {
-    backgroundColor: '#242632',
-    borderRadius: 16,
-    width: width * 0.9,
-    maxHeight: '80%',
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: "#1a1a1a",
+    borderRadius: 10,
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    width: "90%",
   },
-  closeButton: {
-    padding: 4,
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
-  title: {
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginHorizontal: 12,
-  },
-  favoriteButton: {
-    padding: 4,
-  },
-  videoPlaceholder: {
-    height: 200,
-    backgroundColor: '#1a1a1a',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: '#ffffff',
-    marginTop: 12,
+    color: "white",
+    marginHorizontal: 10,
   },
   videoInfo: {
-    padding: 16,
+    marginTop: 16,
   },
   artistText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "white",
   },
   uploadDateText: {
     fontSize: 14,
-    color: '#888888',
+    color: "#888888",
+    marginTop: 4,
   },
 });

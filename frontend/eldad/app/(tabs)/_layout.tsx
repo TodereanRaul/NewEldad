@@ -69,7 +69,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="help"
           options={{
-            title: "Ajutoare",
+            title: "Proiecte",
             tabBarIcon: ({ color, size }) => (
               <FontAwesome5 name="hands-helping" size={size} color={color} />
             ),
