@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Text, View, ScrollView, SafeAreaView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { Text, View, ScrollView, SafeAreaView, TouchableOpacity, Image } from "react-native";
 import VideoCard from "../components/Music/VideoCard";
 import SearchInput from "../components/ui/SearchInput";
 import FilterBar from "../components/ui/FilterBar";
@@ -19,7 +19,7 @@ export default function MusicScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+  const [currentVideo, setCurrentVideo] = useState<any>(null);
 
   // Fetch videos on component mount
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function MusicScreen() {
       return videos;
     }
     if (activeFilter === "Favorites") {
-      return videos.filter(item => item.isFavorite);
+      return videos.filter(item => item.is_favorite);
     }
     
     const filterMap = {
@@ -76,16 +76,16 @@ export default function MusicScreen() {
     searchFields: ['title', 'channel_name']
   });
 
-  const handleContentPress = (item: Video) => {
+  const handleContentPress = (item: any) => {
     setCurrentVideo(item);
     setModalVisible(true);
   };
 
-  const handleFavoriteToggle = (item: Video) => {
+  const handleFavoriteToggle = (item: any) => {
     setVideos(prevVideos => 
       prevVideos.map(v => 
         v.id === item.id 
-          ? { ...v, isFavorite: !v.isFavorite }
+          ? { ...v, is_favorite: !v.is_favorite }
           : v
       )
     );
@@ -105,66 +105,109 @@ export default function MusicScreen() {
   };
 
   const renderContentCard = (item: Video) => {
-    const cardProps = {
-      key: item.id,
-      id: item.id.toString(),
-      title: item.title,
-      artist: item.channel_name,
-      thumbnail: item.thumbnail,
-      uploadDate: new Date(item.published_at).toLocaleDateString(),
-      isFavorite: item.isFavorite || false,
-      type: item.category,
-      onPress: () => handleContentPress(item),
-      onFavoritePress: () => handleFavoriteToggle(item),
-    };
-
     if (activeFilter === "Favorites") {
-      return <FavoriteCard {...cardProps} />;
+      return (
+        <FavoriteCard
+          key={item.id}
+          id={item.id.toString()}
+          title={item.title}
+          artist={item.channel_name}
+          thumbnail={item.thumbnail}
+          uploadDate={new Date(item.published_at).toLocaleDateString('en-GB')}
+          isFavorite={item.is_favorite}
+          type={item.category}
+          onPress={() => handleContentPress(item)}
+          onFavoritePress={() => handleFavoriteToggle(item)}
+        />
+      );
     } else if (activeFilter === "Vezi toate") {
-      return <VeziToateCard {...cardProps} />;
+      return (
+        <VeziToateCard
+          key={item.id}
+          id={item.id.toString()}
+          title={item.title}
+          artist={item.channel_name}
+          thumbnail={item.thumbnail}
+          uploadDate={new Date(item.published_at).toLocaleDateString('en-GB')}
+          isFavorite={item.is_favorite}
+          type={item.category}
+          onPress={() => handleContentPress(item)}
+          onFavoritePress={() => handleFavoriteToggle(item)}
+        />
+      );
     } else if (activeFilter === "Podcast") {
-      return <PodcastCard {...cardProps} />;
+      return (
+        <PodcastCard
+          key={item.id}
+          id={item.id.toString()}
+          title={item.title}
+          artist={item.channel_name}
+          thumbnail={item.thumbnail}
+          uploadDate={new Date(item.published_at).toLocaleDateString('en-GB')}
+          isFavorite={item.is_favorite}
+          onPress={() => handleContentPress(item)}
+          onFavoritePress={() => handleFavoriteToggle(item)}
+        />
+      );
     } else if (activeFilter === "Kids") {
-      return <KidsCard {...cardProps} />;
+      return (
+        <KidsCard
+          key={item.id}
+          id={item.id.toString()}
+          title={item.title}
+          artist={item.channel_name}
+          thumbnail={item.thumbnail}
+          uploadDate={new Date(item.published_at).toLocaleDateString('en-GB')}
+          isFavorite={item.is_favorite}
+          onPress={() => handleContentPress(item)}
+          onFavoritePress={() => handleFavoriteToggle(item)}
+        />
+      );
     } else {
-      return <VideoCard {...cardProps} />;
+      return (
+        <VideoCard
+          key={item.id}
+          videoTitle={item.title}
+          videoArtist={item.channel_name}
+          videoThumbnail={item.thumbnail}
+          uploadDate={new Date(item.published_at).toLocaleDateString('en-GB')}
+          isFavorite={item.is_favorite}
+          onPress={() => handleContentPress(item)}
+          onFavoritePress={() => handleFavoriteToggle(item)}
+        />
+      );
     }
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={{ marginTop: 10 }}>Loading videos...</Text>
-      </SafeAreaView>
+      <View className="flex-1 bg-[#242632] justify-center items-center">
+        <Text className="text-white text-lg">Loading videos...</Text>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text>
-        <TouchableOpacity onPress={fetchVideos} style={{ padding: 10, backgroundColor: '#007AFF', borderRadius: 5 }}>
-          <Text style={{ color: 'white' }}>Retry</Text>
+      <View className="flex-1 bg-[#242632] justify-center items-center">
+        <Text className="text-red-400 mb-4">{error}</Text>
+        <TouchableOpacity onPress={fetchVideos} className="px-4 py-2 bg-blue-500 rounded">
+          <Text className="text-white">Retry</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
-      <ScrollView style={{ flex: 1 }}>
+    <View className="flex-1 bg-[#242632]">
+      {/* Fixed Header */}
+      <SafeAreaView className="px-4 mx-4 pt-4 pb-2 bg-[#242632] shadow-b-lg">
         {/* Header */}
-        <View style={{ padding: 20, backgroundColor: 'white' }}>
-          <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 10 }}>
-            Music & Videos
+        <View className="mb-4">
+          <Text className="text-2xl font-bold text-white mb-2">Media</Text>
+          <Text className="text-gray-300">
+            Discover and enjoy your favorite content. Browse music, kids content, and podcasts.
           </Text>
-          <SearchInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={clearSearch}
-            placeholder="Search videos..."
-          />
         </View>
 
         {/* Filter Bar */}
@@ -174,32 +217,55 @@ export default function MusicScreen() {
           onFilterChange={changeFilter}
         />
 
-        {/* Content */}
-        <View style={{ padding: 20 }}>
-          {searchFilteredContent.length === 0 ? (
-            <View style={{ alignItems: 'center', padding: 40 }}>
-              <Text style={{ fontSize: 16, color: '#666' }}>
-                No videos found
-              </Text>
+        {/* Search Input */}
+        <SearchInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={activeFilter === "Vezi toate" ? "Search all content..." : `Search ${activeFilter.toLowerCase()}...`}
+          onClear={clearSearch}
+          className="mb-4"
+        />
+      </SafeAreaView>
+
+      {/* Scrollable Content */}
+      <ScrollView 
+        className="flex-1" 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 0 }}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        <View className="px-4">
+          {/* Content Cards */}
+          <View className="space-y-2">
+            {searchFilteredContent.map((item) => renderContentCard(item))}
+          </View>
+
+          {/* Empty State */}
+          {activeFilter === "Favorites" && searchFilteredContent.length === 0 && (
+            <View className="flex-1 justify-center items-center py-10">
+              <Text className="text-white text-lg">No favorites yet</Text>
+              <Text className="text-gray-400 text-sm">Tap the heart icon to add favorites</Text>
             </View>
-          ) : (
-            searchFilteredContent.map(renderContentCard)
+          )}
+
+          {/* Empty State for no content */}
+          {searchFilteredContent.length === 0 && searchQuery.length === 0 && (
+            <View className="flex-1 justify-center items-center py-10">
+              <Text className="text-white text-lg">
+                {activeFilter === "Vezi toate" ? "No content available" : `No ${activeFilter.toLowerCase()} available`}
+              </Text>
+              <Text className="text-gray-400 text-sm">Check back later for new content</Text>
+            </View>
           )}
         </View>
       </ScrollView>
-
-      {/* Video Modal */}
-      {currentVideo && (
-        <VideoModal
-          visible={modalVisible}
-          videoId={currentVideo.video_id}
-          title={currentVideo.title}
-          artist={currentVideo.channel_name}
-          isFavorite={currentVideo.isFavorite || false}
-          onClose={closeModal}
-          onFavoriteToggle={handleModalFavoriteToggle}
-        />
-      )}
-    </SafeAreaView>
+      
+      <VideoModal
+        visible={modalVisible}
+        onClose={closeModal}
+        video={currentVideo}
+        onFavoriteToggle={handleModalFavoriteToggle}
+      />
+    </View>
   );
 } 
