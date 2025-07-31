@@ -39,9 +39,10 @@ def fetch_videos():
         request = youtube.search().list(
             part="snippet",
             channelId=channel_id,
-            maxResults=50,
+            maxResults=100,
             order="date",
-            type="video"
+            type="video",
+            eventType="completed"  # Only fetch completed/published videos
         )
         response = request.execute()
 
