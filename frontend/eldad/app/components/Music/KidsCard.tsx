@@ -1,39 +1,41 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
-interface VideoCardProps {
-  videoTitle: string;
-  videoArtist: string;
-  videoThumbnail: string;
+interface KidsCardProps {
+  id: string;
+  title: string;
+  artist: string;
+  thumbnail: string;
   uploadDate: string;
   isFavorite: boolean;
   onPress: () => void;
   onFavoritePress: () => void;
 }
 
-export default function VideoCard({
-  videoTitle,
-  videoArtist,
-  videoThumbnail,
+export default function KidsCard({
+  id,
+  title,
+  artist,
+  thumbnail,
   uploadDate,
   isFavorite,
   onPress,
   onFavoritePress
-}: VideoCardProps) {
+}: KidsCardProps) {
   // Truncate title if it's too long
-  const truncatedTitle = videoTitle.length > 30 
-    ? videoTitle.substring(0, 30) + '...' 
-    : videoTitle;
+  const truncatedTitle = title.length > 30 
+    ? title.substring(0, 30) + '...' 
+    : title;
 
   return (
     <View 
       className="rounded-xl p-4 mb-3"
       style={{
-        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+        backgroundColor: 'rgba(255, 193, 7, 0.15)',
         backdropFilter: 'blur(20px)',
         borderWidth: 1,
-        borderColor: 'rgba(59, 130, 246, 0.3)',
+        borderColor: 'rgba(255, 193, 7, 0.3)',
         shadowColor: '#000000',
         shadowOffset: {
           width: 0,
@@ -51,19 +53,19 @@ export default function VideoCard({
             <View 
               className="w-10 h-10 rounded-full items-center justify-center mr-3"
               style={{
-                backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                backgroundColor: 'rgba(255, 193, 7, 0.3)',
                 borderWidth: 1,
-                borderColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgba(255, 193, 7, 0.5)',
               }}
             >
-              <FontAwesome name="music" size={16} color="#ffffff" />
+              <FontAwesome name="child" size={16} color="#ffffff" />
             </View>
             <View>
               <Text 
                 className="text-xs font-bold"
-                style={{ color: '#3b82f6' }}
+                style={{ color: '#ffc107' }}
               >
-                MUZICĂ
+                KIDS
               </Text>
               <Text className="text-gray-300 text-xs">
                 {uploadDate}
@@ -83,7 +85,7 @@ export default function VideoCard({
         {/* Thumbnail with Play Overlay */}
         <View className="relative mb-3">
           <Image
-            source={{ uri: videoThumbnail }}
+            source={{ uri: thumbnail }}
             className="w-full h-28 rounded-lg"
             resizeMode="cover"
           />
@@ -112,9 +114,9 @@ export default function VideoCard({
           </Text>
           <Text 
             className="text-sm font-medium"
-            style={{ color: '#3b82f6' }}
+            style={{ color: '#ffc107' }}
           >
-            {videoArtist}
+            {artist}
           </Text>
         </View>
       </TouchableOpacity>
