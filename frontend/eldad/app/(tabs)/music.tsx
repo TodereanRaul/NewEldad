@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from "react";
-import { Text, View, ScrollView, SafeAreaView, TouchableOpacity, Image } from "react-native";
+import React, { useState, useMemo, useEffect } from "react";
+import { Text, View, ScrollView, SafeAreaView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import VideoCard from "../components/Music/VideoCard";
 import SearchInput from "../components/ui/SearchInput";
 import FilterBar from "../components/ui/FilterBar";
 import { useSearch } from "../../hooks/useSearch";
 import { useFilter } from "../../hooks/useFilter";
 import { FontAwesome } from "@expo/vector-icons";
+import { api, Video } from "../../service/api";
 
 import KidsCard from "../components/Music/KidsCard";
 import PodcastCard from "../components/Music/PodcastCard";
@@ -13,123 +14,31 @@ import VeziToateCard from "../components/Music/VeziToateCard";
 import FavoriteCard from "../components/Music/FavoriteCard";  
 import VideoModal from "../components/Music/VideoModal";
 
-// Sample music data
-const sampleMusic = [
-  {
-    id: "m1",
-    title: "Amazing Grace - Traditional Hymn",
-    artist: "Eldad Worship Team",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-15",
-    isFavorite: false,
-    type: "music"
-  },
-  {
-    id: "m2", 
-    title: "How Great Thou Art - Classic Worship",
-    artist: "Eldad Choir",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-10",
-    isFavorite: true,
-    type: "music"
-  },
-  {
-    id: "m3",
-    title: "It Is Well With My Soul - Hymn",
-    artist: "Eldad Worship Band",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg", 
-    uploadDate: "2024-01-05",
-    isFavorite: false,
-    type: "music"
-  },
-  {
-    id: "m4",
-    title: "Great Is Thy Faithfulness - Traditional",
-    artist: "Eldad Ensemble",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-01", 
-    isFavorite: true,
-    type: "music"
-  }
-];
-
-// Sample kids data
-const sampleKids = [
-  {
-    id: "k1",
-    title: "Bible Stories for Kids - Noah's Ark",
-    artist: "Kids Ministry",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-15",
-    isFavorite: false,
-    type: "kids"
-  },
-  {
-    id: "k2",
-    title: "Christian Songs for Children",
-    artist: "Children's Choir",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-10",
-    isFavorite: true,
-    type: "kids"
-  },
-  {
-    id: "k3",
-    title: "Prayer Time for Little Ones",
-    artist: "Kids Worship",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-05",
-    isFavorite: false,
-    type: "kids"
-  }
-];
-
-// Sample podcast data
-const samplePodcasts = [
-  {
-    id: "p1",
-    title: "Daily Devotional - Morning Prayer",
-    artist: "Pastor John Smith",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-15",
-    isFavorite: false,
-    type: "podcast"
-  },
-  {
-    id: "p2", 
-    title: "Bible Study - Book of Romans",
-    artist: "Dr. Sarah Johnson",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-10",
-    isFavorite: true,
-    type: "podcast"
-  },
-  {
-    id: "p3",
-    title: "Youth Ministry - Building Faith",
-    artist: "Youth Pastor Mike",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-05",
-    isFavorite: false,
-    type: "podcast"
-  },
-  {
-    id: "p4",
-    title: "Worship Music Discussion",
-    artist: "Music Director Lisa",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    uploadDate: "2024-01-01", 
-    isFavorite: true,
-    type: "podcast"
-  }
-];
-
 export default function MusicScreen() {
-  // Combine all content
-  const allContent = [...sampleMusic, ...sampleKids, ...samplePodcasts];
-  const [content, setContent] = useState(allContent);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentVideo, setCurrentVideo] = useState<any>(null);
+  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+
+  // Fetch videos on component mount
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const fetchVideos = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedVideos = await api.getVideos();
+      setVideos(fetchedVideos);
+    } catch (err) {
+      setError('Failed to fetch videos');
+      console.error('Error fetching videos:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Use the filter hook
   const { activeFilter, changeFilter, filters } = useFilter({
@@ -140,10 +49,10 @@ export default function MusicScreen() {
   // Filter content based on active filter
   const filteredContent = useMemo(() => {
     if (activeFilter === "Vezi toate") {
-      return content; // Use content instead of allContent to reflect favorite changes
+      return videos;
     }
     if (activeFilter === "Favorites") {
-      return content.filter(item => item.isFavorite);
+      return videos.filter(item => item.isFavorite);
     }
     
     const filterMap = {
@@ -153,8 +62,8 @@ export default function MusicScreen() {
     };
     
     const typeFilter = filterMap[activeFilter as keyof typeof filterMap];
-    return content.filter(item => item.type === typeFilter); // Use content instead of allContent
-  }, [activeFilter, content]);
+    return videos.filter(item => item.category === typeFilter);
+  }, [activeFilter, videos]);
 
   // Use the search hook on filtered content
   const { 
@@ -164,20 +73,20 @@ export default function MusicScreen() {
     clearSearch 
   } = useSearch({
     data: filteredContent,
-    searchFields: ['title', 'artist']
+    searchFields: ['title', 'channel_name']
   });
 
-  const handleContentPress = (item: any) => {
+  const handleContentPress = (item: Video) => {
     setCurrentVideo(item);
     setModalVisible(true);
   };
 
-  const handleFavoriteToggle = (item: any) => {
-    setContent(prevContent => 
-      prevContent.map(c => 
-        c.id === item.id 
-          ? { ...c, isFavorite: !c.isFavorite }
-          : c
+  const handleFavoriteToggle = (item: Video) => {
+    setVideos(prevVideos => 
+      prevVideos.map(v => 
+        v.id === item.id 
+          ? { ...v, isFavorite: !v.isFavorite }
+          : v
       )
     );
     console.log("Favorite toggled for:", item.title);
@@ -189,98 +98,73 @@ export default function MusicScreen() {
   };
 
   const handleModalFavoriteToggle = (videoId: string) => {
-    handleFavoriteToggle({ id: videoId });
-  };
-
-  const renderContentCard = (item: any) => {
-    if (activeFilter === "Favorites") {
-      return (
-        <FavoriteCard
-          key={item.id}
-          id={item.id}
-          title={item.title}
-          artist={item.artist}
-          thumbnail={item.thumbnail}
-          uploadDate={item.uploadDate}
-          isFavorite={item.isFavorite}
-          type={item.type}
-          onPress={() => handleContentPress(item)}
-          onFavoritePress={() => handleFavoriteToggle(item)}
-        />
-      );
-    } else if (activeFilter === "Vezi toate") {
-      return (
-        <VeziToateCard
-          key={item.id}
-          id={item.id}
-          title={item.title}
-          artist={item.artist}
-          thumbnail={item.thumbnail}
-          uploadDate={item.uploadDate}
-          isFavorite={item.isFavorite}
-          type={item.type}
-          onPress={() => handleContentPress(item)}
-          onFavoritePress={() => handleFavoriteToggle(item)}
-        />
-      );
-    } else if (activeFilter === "Podcast") {
-      // Podcast card design
-      return (
-        <PodcastCard
-      key={item.id}
-      id={item.id}
-      title={item.title}
-      artist={item.artist}
-      thumbnail={item.thumbnail}
-      uploadDate={item.uploadDate}
-      isFavorite={item.isFavorite}
-      onPress={() => handleContentPress(item)}
-      onFavoritePress={() => handleFavoriteToggle(item)}
-    />
-      );
-    } else if (activeFilter === "Kids") {
-      // Kids card design
-      return (
-        <KidsCard
-        key={item.id}
-        id={item.id} // Add this line
-        title={item.title}
-        artist={item.artist}
-        thumbnail={item.thumbnail}
-        uploadDate={item.uploadDate}
-        isFavorite={item.isFavorite}
-        onPress={() => handleContentPress(item)}
-        onFavoritePress={() => handleFavoriteToggle(item)}
-      />
-      );
-
-    } else {
-      // Music card design (using existing VideoCard)
-      return (
-        <VideoCard
-          key={item.id}
-          videoTitle={item.title}
-          videoArtist={item.artist}
-          videoThumbnail={item.thumbnail}
-          uploadDate={item.uploadDate}
-          isFavorite={item.isFavorite}
-          onPress={() => handleContentPress(item)}
-          onFavoritePress={() => handleFavoriteToggle(item)}
-        />
-      );
+    const video = videos.find(v => v.video_id === videoId);
+    if (video) {
+      handleFavoriteToggle(video);
     }
   };
 
+  const renderContentCard = (item: Video) => {
+    const cardProps = {
+      key: item.id,
+      id: item.id.toString(),
+      title: item.title,
+      artist: item.channel_name,
+      thumbnail: item.thumbnail,
+      uploadDate: new Date(item.published_at).toLocaleDateString(),
+      isFavorite: item.isFavorite || false,
+      type: item.category,
+      onPress: () => handleContentPress(item),
+      onFavoritePress: () => handleFavoriteToggle(item),
+    };
+
+    if (activeFilter === "Favorites") {
+      return <FavoriteCard {...cardProps} />;
+    } else if (activeFilter === "Vezi toate") {
+      return <VeziToateCard {...cardProps} />;
+    } else if (activeFilter === "Podcast") {
+      return <PodcastCard {...cardProps} />;
+    } else if (activeFilter === "Kids") {
+      return <KidsCard {...cardProps} />;
+    } else {
+      return <VideoCard {...cardProps} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={{ marginTop: 10 }}>Loading videos...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text>
+        <TouchableOpacity onPress={fetchVideos} style={{ padding: 10, backgroundColor: '#007AFF', borderRadius: 5 }}>
+          <Text style={{ color: 'white' }}>Retry</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <View className="flex-1 bg-[#242632]">
-      {/* Fixed Header */}
-      <SafeAreaView className="px-4 mx-4 pt-4 pb-2 bg-[#242632] shadow-b-lg">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+      <ScrollView style={{ flex: 1 }}>
         {/* Header */}
-        <View className="mb-4">
-          <Text className="text-2xl font-bold text-white mb-2">Media</Text>
-          <Text className="text-gray-300">
-            Discover and enjoy your favorite content. Browse music, kids content, and podcasts.
+        <View style={{ padding: 20, backgroundColor: 'white' }}>
+          <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 10 }}>
+            Music & Videos
           </Text>
+          <SearchInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onClear={clearSearch}
+            placeholder="Search videos..."
+          />
         </View>
 
         {/* Filter Bar */}
@@ -290,54 +174,32 @@ export default function MusicScreen() {
           onFilterChange={changeFilter}
         />
 
-        {/* Search Input */}
-        <SearchInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder={activeFilter === "Vezi toate" ? "Search all content..." : `Search ${activeFilter.toLowerCase()}...`}
-          onClear={clearSearch}
-          className="mb-4"
-        />
-      </SafeAreaView>
-
-      {/* Scrollable Content */}
-      <ScrollView 
-        className="flex-1" 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 0 }}
-        contentInsetAdjustmentBehavior="automatic"
-      >
-        <View className="px-4">
-          {/* Content Cards */}
-          <View className="space-y-2">
-            {searchFilteredContent.map((item) => renderContentCard(item))}
-          </View>
-
-          {/* Empty State */}
-          {activeFilter === "Favorites" && searchFilteredContent.length === 0 && (
-            <View className="flex-1 justify-center items-center py-10">
-              <Text className="text-white text-lg">No favorites yet</Text>
-              <Text className="text-gray-400 text-sm">Tap the heart icon to add favorites</Text>
-            </View>
-          )}
-
-          {/* Empty State for no content */}
-          {searchFilteredContent.length === 0 && searchQuery.length === 0 && (
-            <View className="flex-1 justify-center items-center py-10">
-              <Text className="text-white text-lg">
-                {activeFilter === "Vezi toate" ? "No content available" : `No ${activeFilter.toLowerCase()} available`}
+        {/* Content */}
+        <View style={{ padding: 20 }}>
+          {searchFilteredContent.length === 0 ? (
+            <View style={{ alignItems: 'center', padding: 40 }}>
+              <Text style={{ fontSize: 16, color: '#666' }}>
+                No videos found
               </Text>
-              <Text className="text-gray-400 text-sm">Check back later for new content</Text>
             </View>
+          ) : (
+            searchFilteredContent.map(renderContentCard)
           )}
         </View>
       </ScrollView>
-      <VideoModal
-        visible={modalVisible}
-        onClose={closeModal}
-        video={currentVideo}
-        onFavoriteToggle={handleModalFavoriteToggle}
-      />
-    </View>
+
+      {/* Video Modal */}
+      {currentVideo && (
+        <VideoModal
+          visible={modalVisible}
+          videoId={currentVideo.video_id}
+          title={currentVideo.title}
+          artist={currentVideo.channel_name}
+          isFavorite={currentVideo.isFavorite || false}
+          onClose={closeModal}
+          onFavoriteToggle={handleModalFavoriteToggle}
+        />
+      )}
+    </SafeAreaView>
   );
 } 
