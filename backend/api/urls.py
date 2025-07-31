@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from youtube_videos.views import VideoListView
 
 app_name = 'api'
 
@@ -24,4 +25,8 @@ urlpatterns = [
     path('payment/success/', views.payment_success, name='payment-success'),
     path('payment/cancel/', views.payment_cancel, name='payment-cancel'),
     path('payment/error/', views.payment_error, name='payment-error'),
+    
+    # Video endpoints (moved from youtube_videos.urls)
+    path('videos/', VideoListView.as_view(), name='video-list'),
+    path('videos/<str:category>/', VideoListView.as_view(), name='video-by-category'),
 ] 
