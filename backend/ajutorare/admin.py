@@ -10,6 +10,10 @@ class EldadAjutorareAdmin(ModelAdmin):
     readonly_fields = ('id', 'created_at', 'updated_at', 'thumbnail_preview', 'image1_preview', 'image2_preview', 'image3_preview', 'image4_preview', 'image5_preview')
     ordering = ('-created_at',)
     
+    # Change the admin panel display names
+    verbose_name = "Proiect/Ajutorare"
+    verbose_name_plural = "Administrare Proiecte/Ajutorare"
+    
     fieldsets = (
         ('Basic Information', {
             'fields': ('title', 'description')

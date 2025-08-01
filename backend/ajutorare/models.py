@@ -19,6 +19,8 @@ class EldadAjutorare(models.Model):
     class Meta:
         db_table = 'eldad_ajutorare'
         ordering = ['-created_at']
+        verbose_name = "Proiect/Ajutorare"
+        verbose_name_plural = "Administrare Proiecte/Ajutorare"
 
     def __str__(self):
         return self.title
