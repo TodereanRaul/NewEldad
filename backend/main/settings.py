@@ -175,6 +175,13 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF settings for ngrok
+CSRF_TRUSTED_ORIGINS = [
+    'https://4a45368cbff3.ngrok-free.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
 #Unfold settings
 UNFOLD = {
     "SITE_TITLE": "Eldad",
