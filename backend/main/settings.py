@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'api',
     'ajutorare',
     'media',
-    'youtube_videos'
+    'youtube_videos',
+    'events'
 ]
 
 MIDDLEWARE = [

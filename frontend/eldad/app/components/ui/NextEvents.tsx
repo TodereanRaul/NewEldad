@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '../../../config/api';
 
 interface Event {
   id: string;
@@ -18,7 +19,7 @@ interface NextEventsProps {
   showLoading?: boolean;
   customEvents?: Event[];
   maxEvents?: number;
-  hideHeader?: boolean; // Add this line
+  hideHeader?: boolean;
 }
 
 export default function NextEvents({ 
@@ -26,7 +27,7 @@ export default function NextEvents({
   showLoading = false,
   customEvents,
   maxEvents = 3,
-  hideHeader = false // Add this line
+  hideHeader = false
 }: NextEventsProps) {
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
@@ -64,24 +65,28 @@ export default function NextEvents({
     }
   ];
 
-  // Future function to fetch from backend
+  // Fetch events from backend
   const fetchEvents = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('https://your-backend.com/api/events');
-      // const data = await response.json();
-      // setEvents(data);
+      const response = await fetch(`${API_BASE_URL}/events/upcoming/`);
       
-      // For now, use default events
-      setEvents(defaultEvents);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const data = await response.json();
+      
+      if (data && Array.isArray(data)) {
+        setEvents(data);
+      } else {
+        throw new Error('Invalid data format');
+      }
       
     } catch (err) {
+      console.error('Error fetching events:', err);
       setError('Failed to load events');
       setEvents(defaultEvents); // Fallback to default
     } finally {

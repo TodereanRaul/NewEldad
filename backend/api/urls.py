@@ -29,4 +29,5 @@ urlpatterns = [
     path('videos/', VideoListView.as_view(), name='video-list'),
     path('videos/<str:category>/', VideoListView.as_view(), name='video-by-category'),
     path('videos/<str:video_id>/favorite/', views.VideoFavoriteView.as_view(), name='video-favorite'),
+    path('events/', include('events.urls')),
 ] 
